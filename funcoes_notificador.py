@@ -3,7 +3,7 @@ import time
 import datetime
 
 #Função de notificação da biblioteca plyer
-from plyer import notification
+from winotify import Notification
 
 def ler_tarefas(tarefas_arquivo="tarefas.txt"):
 
@@ -26,10 +26,12 @@ def ler_tarefas(tarefas_arquivo="tarefas.txt"):
 
 def enviar_notificacao(titulo, mensagem):
 
-    title=titulo,
-    message=mensagem,
-    app_name="Notificador de Tarefas",
-    timeout=10
+    notification = Notification(
+        app_id = "Notificador de Tarefas",
+        title=titulo,
+        msg=mensagem
+    )
+    notification.show()
 
 def monitorar_tarefas():
      
