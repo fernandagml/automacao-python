@@ -1,62 +1,63 @@
-#Função de notificação da biblioteca plyer
-from plyer import notification
+#Bibliotecas TKinter
+import tkinter as tk
 
-#Bibliotecas de tempo do Python
-import time
+#Biblioteca para rodar a notificação em segundo plano
+import threading as thr
+
+#Biblioteca de tempo do Python
 import datetime
 
-TITULO = "Lembrete de Tarefa!"
-MENSAGEM = "Sua tarefa está agendada para agora. Não se esqueça!"
-
-def ler_tarefas(tarefas_arquivo="tarefas.txt"):
-    tarefas = []
-    with open(tarefas_arquivo, 'r') as arquivo:
-            for linha in arquivo:
-                #Remove espaços em branco do início e fim da linha
-                linha_limpa = linha.strip()
-                if not linha_limpa:
-                    continue
-                
-                partes = linha.split(';', 1)
-                if len(partes) == 2:
-                    horario_str, mensagem = partes
-                    tarefas.append({
-                        'horario': datetime.datetime.strptime(horario_str, '%H:%M').time(),
-                        'mensagem': mensagem.strip()
-                    })
-    return tarefas
-
-def enviar_notificacao(titulo, mensagem):
-        title=titulo,
-        message=mensagem,
-        app_name="Notificador de Tarefas",
-        timeout=10
-
-print("Notificador de tarefas iniciado. Aguardando o horário...")
-
-tarefas_agendadas = ler_tarefas()
-
-if not tarefas_agendadas:
-     print("Nenhuma tarefa agendada. Atualize seu arquivo.")
-else:
-    while True:
-        #Horário atual
-        agora = datetime.datetime.now()
-
-        for tarefa in tarefas_agendadas:
-            horario_tarefa = tarefa['horario']
-
-        #Horário para a notificação ser enviada
-        horario_notificacao = agora.replace(hour=8, minute=55, second=0, microsecond=0)
-
-        if agora.hour == horario_tarefa.hour and agora.minute == horario_tarefa.minute:
-                print(f"Notificação: {tarefa['mensagem']}")
-                enviar_notificacao("Lembrete de Tarefa!", tarefa['mensagem'])
-                
-                tarefas_agendadas.remove(tarefa)
-                
-        time.sleep(30)
+from funcoes_notificador import ler_tarefas, enviar_notificacao, monitorar_tarefas
         
-        if not tarefas_agendadas:
-            print("Todas as tarefas agendadas foram enviadas. Encerrando o programa.")
-            break
+def salvar_tarefa():
+
+    # Declara que as variáveis a seguir são as globais, ou seja, as mesmas criadas na janela do Tkinter.
+    global entrada_horario, entrada_mensagem
+
+    horario = entrada_horario.get()
+    mensagem = entrada_mensagem.get()
+    
+    if horario and mensagem:
+
+        #Formato do horário
+        datetime.datetime.strptime(horario, '%H:%M')
+        
+        with open("tarefas.txt", "a", encoding='utf-8') as arquivo:
+            arquivo.write(f"\n{horario};{mensagem}")
+        
+        # Limpa os campos após salvar
+        entrada_horario.delete(0, tk.END)
+        entrada_mensagem.delete(0, tk.END)
+        
+        print("Tarefa salva com sucesso!")
+
+    else:
+        print("Por favor, preencha todos os campos.")
+
+#Janela Tk
+janela = tk.Tk()
+janela.config(bg="#E6E9FF")
+janela.title("Gerenciador de Tarefas")
+janela.geometry("350x200")
+
+titulo_label = tk.Label(janela, text="Adicionar Nova Tarefa", font=("Arial", 14, "bold"))
+titulo_label.pack(pady=10)
+
+horario_label = tk.Label(janela, text="Horário (HH:MM):")
+horario_label.pack()
+entrada_horario = tk.Entry(janela)
+entrada_horario.pack()
+
+mensagem_label = tk.Label(janela, text="Notificar:")
+mensagem_label.pack()
+entrada_mensagem = tk.Entry(janela)
+entrada_mensagem.pack()
+
+botao_salvar = tk.Button(janela, text="Salvar Tarefa", command=salvar_tarefa)
+botao_salvar.pack(pady=10)
+
+#Lógica de monitoramento em uma thread separada -- permite que a interface(GUI) e o monitoramento funcionem ao mesmo tempo
+monitor_thread = thr.Thread(target=monitorar_tarefas, daemon=True)
+monitor_thread.start()
+
+janela.mainloop()
