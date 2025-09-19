@@ -7,7 +7,7 @@ import threading as thr
 #Biblioteca de tempo do Python
 import datetime
 
-from funcoes_notificador import ler_tarefas, enviar_notificacao, monitorar_tarefas
+from funcoes_notificador import Notificador as Nf
         
 def salvar_tarefa():
 
@@ -57,7 +57,7 @@ botao_salvar = tk.Button(janela, text="Salvar Tarefa", command=salvar_tarefa)
 botao_salvar.pack(pady=10)
 
 #Lógica de monitoramento em uma thread separada -- permite que a interface(GUI) e o monitoramento funcionem ao mesmo tempo
-monitor_thread = thr.Thread(target=monitorar_tarefas, daemon=True)
+monitor_thread = thr.Thread(target=Nf.monitorar_tarefas, daemon=True)
 monitor_thread.start()
 
 janela.mainloop()
